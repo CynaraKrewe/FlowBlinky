@@ -1,0 +1,10 @@
+*.txt
+*.pyc
+Debug
+Release
+/__pycache__/
+/library/
+/.launches/
+include/flow/
+include/tm4c/
+source/flow/
