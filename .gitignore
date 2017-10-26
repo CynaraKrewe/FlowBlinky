@@ -8,3 +8,4 @@ Release
 include/flow/
 include/tm4c/
 source/flow/
+.settings/
