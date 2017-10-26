@@ -1,4 +1,4 @@
-# FlowTM4C
+# FlowBlinky
 
 [We have conan packages!](https://bintray.com/cynarakrewe/CynaraConan)
 
