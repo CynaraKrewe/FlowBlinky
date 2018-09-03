@@ -33,91 +33,50 @@
 #include "pinmux/pinout.h"
 
 #include "flow/components.h"
+#include "flow/reactor.h"
 #include "flow/utility.h"
 
 #include "flow/tm4c/clock.h"
-#include "flow/tm4c/gpio.h"
+#include "flow/tm4c/digitalio.h"
 
-static Flow::Component** _sysTickComponents = nullptr;
-static unsigned int _sysTickComponentsCount = 0;
+using namespace Flow::TM4C;
+
+// Create the components of the application.
+Timer timer{100 /*ms*/};
+Toggle toggle;
+Digital::Output led{Pin::Port::N, 1, Digital::Polarity::Normal};
 
 int main(void)
 {
 	// Set up the clock circuit.
-	Clock::instance()->configure(120 MHz);
+	Clock::instance().configure(8 MHz);
 
 	// Set up the pin mux configuration.
 	PinoutSet();
 
-	Timer* timer = new Timer(100 /*ms*/);
-	Toggle* toggle = new Toggle();
-	DigitalOutput* led = new DigitalOutput(Gpio::Name{ Gpio::Port::N, 1 });
-
 	// Connect the components of the application.
-	Flow::Connection* connections[] =
-	{
-		Flow::connect(timer->outTick, toggle->tick),
-		Flow::connect(toggle->out, led->inValue)
-	};
+	Flow::connect(timer.outTick, toggle.tick);
+    Flow::connect(toggle.out, led.inState);
 
-	// Define the deployment of the components.
-	Flow::Component* mainComponents[] =
-	{
-		toggle,
-		led
-	};
-
-	Flow::Component* sysTickComponents[] =
-	{
-		timer
-	};
-
-	_sysTickComponents = sysTickComponents;
-	_sysTickComponentsCount = ArraySizeOf(sysTickComponents);
+	Flow::Reactor::start();
 
 	// Run the application.
 	while(true)
 	{
-		for(unsigned int c = 0; c < ArraySizeOf(mainComponents); c++)
-		{
-			mainComponents[c]->run();
-		}
-	}
-
-	// Disconnect the components of the application.
-	for(unsigned int i = 0; i < ArraySizeOf(connections); i++)
-	{
-		Flow::disconnect(connections[i]);
-	}
-
-	// Destruct the components of the application.
-	for(unsigned int i = 0; i < ArraySizeOf(mainComponents); i++)
-	{
-		delete mainComponents[i];
-	}
-
-	_sysTickComponentsCount = 0;
-	_sysTickComponents = nullptr;
-
-	for(unsigned int i = 0; i < ArraySizeOf(sysTickComponents); i++)
-	{
-		delete sysTickComponents[i];
+	    Flow::Reactor::run();
 	}
 }
 
 // SysTick related stuff.
-extern "C" void SysTickIntHandler(void)
+extern "C" void isrSysTick(void)
 {
-	for(unsigned int c = 0; c < _sysTickComponentsCount; c++)
-	{
-		_sysTickComponents[c]->run();
-	}
+	timer.isr();
 }
 
 // An assert will end up here.
-extern "C" void __error__(const char *pcFilename, uint32_t ui32Line)
+extern "C" void __assert_func(const char* file, int line, const char* function, const char* expression)
 {
-	__asm__ __volatile__("bkpt");
-	while(true);
+    __asm__ __volatile__("bkpt");
+    while(true);
 }
 

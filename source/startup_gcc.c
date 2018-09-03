@@ -58,6 +58,7 @@
  * SOLUTION.
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -77,8 +78,7 @@ static void IntDefaultHandler(void);
 // The entry point for the application.
 extern int main(void);
 
-extern void SysTickIntHandler(void);
-extern void USB0DeviceIntHandler(void);
+extern void isrSysTick(void);
 
 // System stack start determined by the linker script.
 extern unsigned estack __asm("estack");
@@ -103,7 +103,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler, // Debug monitor handler
     0,                 // Reserved
     IntDefaultHandler, // The PendSV handler
-    SysTickIntHandler, // The SysTick handler
+    isrSysTick, // The SysTick handler
 	IntDefaultHandler, // GPIO Port A
 	IntDefaultHandler, // GPIO Port B
 	IntDefaultHandler, // GPIO Port C
@@ -146,7 +146,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler, // CAN1
 	IntDefaultHandler, // Ethernet
     IntDefaultHandler, // Hibernate
-	USB0DeviceIntHandler, // USB0
+    IntDefaultHandler, // USB0
     IntDefaultHandler, // PWM Generator 3
     IntDefaultHandler, // uDMA Software Transfer
     IntDefaultHandler, // uDMA Error
@@ -318,7 +318,7 @@ caddr_t _sbrk(int increment)
     static char* currentHeapTop = &heap;
     char* previousHeapTop = currentHeapTop;
 
-    ASSERT(currentHeapTop + increment < &eheap);
+    assert(currentHeapTop + increment < &eheap);
 
     currentHeapTop += increment;
 
