@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2018 Cynara Krewe
+ * Copyright (c) 2019 Cynara Krewe
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software, hardware and associated documentation files (the "Solution"), to deal
@@ -42,14 +42,14 @@
 using namespace Flow::TM4C;
 
 // Create the components of the application.
-Timer timer{100 /*ms*/};
+SoftwareTimer timer{100 /*ms*/};
 Toggle toggle;
 Digital::Output led{Pin::Port::N, 1, Digital::Polarity::Normal};
 
 int main(void)
 {
 	// Set up the clock circuit.
-	Clock::instance().configure(8 MHz);
+	Clock::instance().configure<Device::TM4C129>(8 MHz);
 
 	// Set up the pin mux configuration.
 	PinoutSet();
